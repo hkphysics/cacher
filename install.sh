@@ -2,7 +2,7 @@
 set -e -v
 
 scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-container=$(buildah from joequant/cauldron-minimal)
+container=$(buildah from docker.io/joequant/cauldron-minimal)
 buildah config --label maintainer="Joseph C Wang <joequant@gmail.com>" $container
 buildah config --user root $container
 mountpoint=$(buildah mount $container)
@@ -29,11 +29,12 @@ chmod a+x $rootfsDir/tmp/install-container.sh
 
 dnf --installroot="$rootfsDir" \
     --forcearch="$buildarch" \
-    --setopt=install_weak_deps=False --best -v -y \
-    --nodocs --allowerasing \
+    --setopt=install_weak_deps=False --best  -y \
+    --nodocs \
     --releasever="$releasever" \
     --nogpgcheck \
-    install \
+    --use-host-config \
+    install  --allowerasing \
     squid \
     openssl \
     gcc-c++ \
@@ -46,10 +47,11 @@ dnf --installroot="$rootfsDir" \
 
 dnf --installroot="$rootfsDir" \
     --forcearch="$buildarch" \
-    --setopt=install_weak_deps=False --best -v -y \
-    --nodocs --allowerasing \
+    --setopt=install_weak_deps=False --best -y \
+    --nodocs \
     --releasever="$releasever" \
     --nogpgcheck \
+    --use-host-config \
     install \
     distcc-server
 
@@ -71,7 +73,6 @@ buildah copy $container $scriptDir/squid.conf /etc/squid
 buildah copy $container $scriptDir/storeid.conf /etc/squid
 buildah copy $container $scriptDir/distccd-cmdlist /etc/sysconfig
 buildah copy $container $scriptDir/commands.allow.sh /etc/distcc
-buildah copy $container $scriptDir/distcc /etc/default
 
 chmod a+r -R $rootfsDir/etc
 
